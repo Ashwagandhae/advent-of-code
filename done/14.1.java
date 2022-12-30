@@ -20,7 +20,7 @@ class Cave {
   char[][] terrain;
   int size;
 
-  Cave(ArrayList<ArrayList<Pos>> paths, int size, int floor) {
+  Cave(ArrayList<ArrayList<Pos>> paths, int size) {
     // create empty terrain
     this.size = size;
     terrain = new char[size][size];
@@ -38,7 +38,6 @@ class Cave {
         fillLine(start, end, '#');
       }
     }
-    fillLine(new Pos(0, floor), new Pos(size - 1, floor), '#');
   }
 
   void fillLine(Pos start, Pos end, char material) {
@@ -71,13 +70,10 @@ class Cave {
         x++;
       } else {
         this.terrain[y][x] = 'o';
-        if (x == startPos.x && y == startPos.y) {
-          return false;
-        }
         return true;
       }
     }
-    throw new AbstractMethodError(null);
+    return false;
   }
 
   boolean outOfBounds(int x, int y) {
@@ -85,7 +81,7 @@ class Cave {
   }
 
   boolean isAir(int x, int y) {
-    return terrain[y][x] == '.';
+    return outOfBounds(x, y) || terrain[y][x] == '.';
   }
 
   void printTerrain() {
@@ -103,12 +99,11 @@ public class Main {
   public static void main(String[] args)
       throws Exception {
     // create file object
-    java.io.File file = new java.io.File("../data/17.txt");
+    java.io.File file = new java.io.File("../data/14.txt");
     // create scanner object
     Scanner scanner = new Scanner(file);
     ArrayList<ArrayList<Pos>> paths = new ArrayList<ArrayList<Pos>>();
     // loop each line
-    int largestY = 0;
     while (scanner.hasNextLine()) {
       String line = scanner.nextLine();
       String[] parts = line.split("->");
@@ -118,22 +113,19 @@ public class Main {
         int x = Integer.parseInt(coords[0].strip());
         int y = Integer.parseInt(coords[1].strip());
         path.add(new Pos(x, y));
-        if (y > largestY) {
-          largestY = y;
-        }
       }
       paths.add(path);
     }
     scanner.close();
 
-    int size = 800;
-    Cave cave = new Cave(paths, size, largestY + 2);
+    int size = 600;
+    Cave cave = new Cave(paths, size);
     int answer = 0;
     while (cave.dropSand(new Pos(500, 0))) {
       answer++;
     }
 
-    System.out.println(answer + 1);
+    System.out.println(answer);
 
   }
 }

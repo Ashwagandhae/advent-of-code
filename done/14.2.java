@@ -103,7 +103,7 @@ public class Main {
   public static void main(String[] args)
       throws Exception {
     // create file object
-    java.io.File file = new java.io.File("../data/17.txt");
+    java.io.File file = new java.io.File("../data/14.txt");
     // create scanner object
     Scanner scanner = new Scanner(file);
     ArrayList<ArrayList<Pos>> paths = new ArrayList<ArrayList<Pos>>();

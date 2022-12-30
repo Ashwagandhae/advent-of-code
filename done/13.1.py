@@ -1,6 +1,4 @@
 import json
-import functools
-
 
 with open("../data/13.txt", "r") as f:
     raw = f.read()
@@ -42,20 +40,17 @@ def compare(left, right):
     # if left is int and right is list
     elif isinstance(left, int) and isinstance(right, list):
         return compare([left], right)
-    return 0
 
 
-combined = []
-for block in data:
-    for item in block:
-        combined.append(item)
+correct_pairs = []
+correct_sum = 0
+for (i, pair) in enumerate(data):
+    if compare(pair[0], pair[1]) == 1:
+        correct_pairs.append(pair)
+        print("correct")
+        correct_sum += i + 1
+    else:
+        print("incorrect")
 
-combined.append([[2]])
-combined.append([[6]])
-# sort combined with custom compare function
-combined.sort(key=functools.cmp_to_key(compare), reverse=True)
 
-# get index of [[2]] and [[6]]
-index2 = combined.index([[2]]) + 1
-index6 = combined.index([[6]]) + 1
-print(index2 * index6)
+print(correct_sum)
