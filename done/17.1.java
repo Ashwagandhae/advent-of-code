@@ -4,7 +4,6 @@ import java.util.*;
 class Floor {
   boolean[][] terrain;
   int highestRock;
-  int highestRocks[];
   RockLoop rockLoop;
   InstructLoop instructLoop;
 
@@ -20,11 +19,7 @@ class Floor {
       terrain[0][y] = true;
       terrain[width + 1][y] = true;
     }
-    this.highestRocks = new int[width];
-    this.highestRock = height;
-    for (int x = 0; x < width; x++) {
-      highestRocks[x] = height;
-    }
+    highestRock = height - 1;
     this.rockLoop = rockLoop;
     this.instructLoop = instructLoop;
 
@@ -35,11 +30,10 @@ class Floor {
     // start at three because wall
     int rockX = 3;
     int rockY = highestRock - rock.height - 3;
-    if (rockY < 0) {
-      extendTerrain(100);
-      rockY = highestRock - rock.height - 3;
-    }
-
+    // System.out.println("Rock starts falling from " + rockX + ", " + rockY);
+    // if (rockY < 0) {
+    // extendTerrain(rockY);
+    // }
     while (true) {
       rockX = hotAirJet(rock, rockX, rockY);
       if (canFallDown(rock, rockX, rockY)) {
@@ -52,15 +46,6 @@ class Floor {
       }
     }
 
-  }
-
-  boolean highestRockFlat() {
-    for (int x = 0; x < terrain.length; x++) {
-      if (!terrain[x][highestRock]) {
-        return false;
-      }
-    }
-    return true;
   }
 
   void printTerrain() {
@@ -77,26 +62,14 @@ class Floor {
     }
   }
 
-  void extendTerrain(int amount) {
-    boolean[][] newTerrain = new boolean[terrain.length][terrain[0].length + amount];
-    for (int y = 0; y < terrain[0].length; y++) {
-      for (int x = 0; x < terrain.length; x++) {
-        newTerrain[x][y + amount] = terrain[x][y];
+  void extendTerrain(int y) {
+    boolean[][] newTerrain = new boolean[terrain.length][terrain[0].length - y];
+    for (int x = 0; x < terrain.length; x++) {
+      for (int newY = 0; newY < terrain[0].length; newY++) {
+        newTerrain[x][newY] = terrain[x][newY - y];
       }
     }
-    // set side walls
-    for (int y = 0; y < terrain.length; y++) {
-      newTerrain[0][y] = true;
-      newTerrain[newTerrain.length - 1][y] = true;
-    }
-
     terrain = newTerrain;
-    // update highest rock
-    highestRock += amount;
-    // update highest rocks
-    for (int x = 0; x < highestRocks.length; x++) {
-      highestRocks[x] += amount;
-    }
   }
 
   int hotAirJet(Rock rock, int x, int y) {
@@ -137,22 +110,12 @@ class Floor {
 
   void updateHighestRock() {
     // get rock with highest y
-    for (int y = 0; y < highestRock; y++) {
+    for (int y = 0; y < terrain[0].length; y++) {
       // exclude walls
       for (int x = 1; x < terrain.length - 1; x++) {
         if (terrain[x][y]) {
-          if (y < this.highestRock) {
-            this.highestRock = y;
-          }
-        }
-      }
-    }
-    // get highest rock for each column
-    for (int x = 1; x < terrain.length - 1; x++) {
-      for (int y = 0; y < highestRocks[x - 1]; y++) {
-        if (terrain[x][y]) {
-          if (y < highestRocks[x - 1]) {
-            highestRocks[x - 1] = y;
+          if (y < highestRock) {
+            highestRock = y;
           }
         }
       }
@@ -266,67 +229,16 @@ public class Main {
 
     InstructLoop instructLoop = new InstructLoop(input);
     RockLoop rockLoop = new RockLoop();
-    Floor floor = new Floor(7, 100000 * 5, rockLoop, instructLoop);
-    // create dictionary for cycle finder
-    HashMap<String, String> cycleFinder = new HashMap<String, String>();
-    int cycleStart = 0;
-    int cycleLength = 0;
-    int cycleRockHeight = 0;
-    for (int i = 0; i < 100000; i++) {
+    Floor floor = new Floor(7, 2022 * 10, rockLoop, instructLoop);
+    for (int i = 0; i < 2022; i++) {
       floor.dropRock();
-      // copy floor.highestRocks and subtract highestRock from each element
-      int[] highestRocks = Arrays.copyOf(floor.highestRocks, floor.highestRocks.length);
-      for (int j = 0; j < highestRocks.length; j++) {
-        highestRocks[j] -= floor.highestRock;
-      }
-      // convert instructLoop, rockLoop, and floor.highestRocks to string
-      String key = instructLoop.index + " " + rockLoop.index + " " + Arrays.toString(highestRocks);
-      // check if key exists
-      if (cycleFinder.containsKey(key)) {
-        // convert string key to i and highestRock
-        int cycleIndex = Integer.parseInt(cycleFinder.get(key).split(" ")[0]);
-        int cycleHighestRock = Integer.parseInt(cycleFinder.get(key).split(" ")[1]);
-
-        cycleStart = cycleIndex;
-        cycleLength = i - cycleIndex;
-        cycleRockHeight = floor.getHighestRock() - cycleHighestRock;
-
-        break;
-      } else {
-        // set value to i and getHighestRock
-        cycleFinder.put(key, i + " " + floor.getHighestRock());
-      }
-      // print i every 100
       if (i % 100 == 0) {
-        System.out.println(key);
+        // System.out.println("Rock #" + i);
       }
     }
-    System.out.println("cycleStart: " + cycleStart);
-    System.out.println("cycleLength: " + cycleLength);
-    System.out.println("cycleRockHeight: " + cycleRockHeight);
-    long iterations = 1_000_000_000_000L - cycleStart;
-    long rockHeight = 0;
-    // first get rock height at cycleStart
-    // reset floor
-    instructLoop = new InstructLoop(input);
-    rockLoop = new RockLoop();
-    floor = new Floor(7, 100000 * 5, rockLoop, instructLoop);
-    for (int i = 0; i < cycleStart; i++) {
-      floor.dropRock();
-    }
-    int beforeStartHeight = floor.getHighestRock();
-    rockHeight = beforeStartHeight;
-    // then add how many cycles fit in iterations
-    rockHeight += (iterations / cycleLength) * cycleRockHeight;
+    int answer = floor.getHighestRock() - 1;
 
-    // then add rock height at cycleStart + iterations % cycleLength
-    // reset floor
-    // idk why i have to add 5 to iterations % cycleLength but it works
-    for (int i = 0; i < iterations % cycleLength + 5; i++) {
-      floor.dropRock();
-    }
-    rockHeight += floor.getHighestRock() - beforeStartHeight;
-    System.out.println("rockHeight: " + rockHeight);
+    System.out.println(answer);
 
   }
 }
