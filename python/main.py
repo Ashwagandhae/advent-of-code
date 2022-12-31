@@ -1,61 +1,134 @@
-import json
-import functools
+import numpy as np
 
 
-with open("../data/13.txt", "r") as f:
+sides_adder = [
+    # bottom
+    [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+    # top
+    [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]],
+    # left
+    [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]],
+    # right
+    [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]],
+    # back
+    [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]],
+    # front
+    [[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]],
+]
+
+
+def get_sides(pos):
+    sides = []
+    # get 6 sides (array of 4 positions) of 1x1x1 cube at pos
+    for side_adder in sides_adder:
+        side = []
+        for adder in side_adder:
+            side.append(pos + np.array(adder))
+        sides.append(side)
+    return sides
+
+
+def side_to_string(side):
+    pos_string = [",".join([str(p) for p in pos]) for pos in side]
+    ret = "-".join(sorted(pos_string))
+    return ret
+
+
+def surface_area_from_cubes(cubes):
+    side_dict = {}
+    for cube in cubes:
+        sides = get_sides(cube)
+        for side in sides:
+            side_key = side_to_string(side)
+            if side_key in side_dict:
+                side_dict[side_key] += 1
+            else:
+                side_dict[side_key] = 1
+    surface_area = 0
+    for key, value in side_dict.items():
+        if value == 1:
+            surface_area += 1
+    return surface_area
+
+
+def out_of_bounds(cube_arr, pos):
+    if pos[0] < 0 or pos[1] < 0 or pos[2] < 0:
+        return True
+    if (
+        pos[0] >= cube_arr.shape[0]
+        or pos[1] >= cube_arr.shape[1]
+        or pos[2] >= cube_arr.shape[2]
+    ):
+        return True
+    return False
+
+
+def get_air_pocket_cubes(cube_arr, pos, escapable_poses):
+    queue = [pos]
+    visited = set()
+    count = 0
+    while queue:
+        pos = queue.pop(0)
+        if tuple(pos) in visited:
+            continue
+        count += 1
+        visited.add(tuple(pos))
+        for pos_adder in [
+            [0, 0, 1],
+            [0, 0, -1],
+            [0, 1, 0],
+            [0, -1, 0],
+            [1, 0, 0],
+            [-1, 0, 0],
+        ]:
+            new_pos = pos + np.array(pos_adder)
+            if out_of_bounds(cube_arr, new_pos) or tuple(new_pos) in escapable_poses:
+                # escape found
+                return None
+            if cube_arr[new_pos[0], new_pos[1], new_pos[2]] == False:
+                queue.append(new_pos)
+    return visited
+
+
+with open("../data/18.txt", "r") as f:
     raw = f.read()
 
-data = []
-for block in raw.split("\n\n"):
-    current = []
-    for line in block.split("\n"):
-        current.append(json.loads(line))
-    data.append(current)
+cubes = []
+for line in raw.splitlines():
+    pos = [int(s) for s in line.split(",")]
+    cubes.append(np.array(pos))
+
+surface_area = surface_area_from_cubes(cubes)
+
+cube_arr = np.zeros((25, 25, 25), dtype=bool)
+for cube in cubes:
+    cube_arr[cube[0], cube[1], cube[2]] = True
+
+escapable_poses = set()
+pocket_poses = set()
+# loop through all np array
+progress = 0
+for x in range(cube_arr.shape[0]):
+    for y in range(cube_arr.shape[1]):
+        for z in range(cube_arr.shape[2]):
+            progress += 1
+            if progress % 100 == 0:
+                print(f"progress: {progress}/{cube_arr.size}")
+            # only check air cubes
+            if cube_arr[x, y, z]:
+                continue
+            # don't check already checked cubes
+            if (x, y, z) in pocket_poses:
+                continue
+            pos = np.array([x, y, z])
+            air_pocket_cubes = get_air_pocket_cubes(cube_arr, pos, escapable_poses)
+            # if can escape, add to escapable_poses
+            if air_pocket_cubes == None:
+                escapable_poses.add(tuple(pos))
+            else:
+                surface_area -= surface_area_from_cubes(air_pocket_cubes)
+                # add to pocket_poses
+                pocket_poses.update(air_pocket_cubes)
 
 
-def compare(left, right):
-    # if both are ints, compare them
-    if isinstance(left, int) and isinstance(right, int):
-        if left < right:
-            return 1
-        elif left > right:
-            return -1
-        else:
-            return 0
-    # if both are lists, compare them
-    elif isinstance(left, list) and isinstance(right, list):
-        for i in range(len(left)):
-            if i >= len(right):
-                return -1
-            result = compare(left[i], right[i])
-            if result != 0:
-                return result
-        if len(left) < len(right):
-            return 1
-        elif len(right) > len(left):
-            return -1
-        else:
-            return 0
-    # if right is int and left is list
-    elif isinstance(left, list) and isinstance(right, int):
-        return compare(left, [right])
-    # if left is int and right is list
-    elif isinstance(left, int) and isinstance(right, list):
-        return compare([left], right)
-    return 0
-
-
-combined = []
-for block in data:
-    for item in block:
-        combined.append(item)
-
-combined.append([[2]])
-combined.append([[6]])
-# sort combined with custom compare function
-combined.sort(key=functools.cmp_to_key(compare), reverse=True)
-
-# get index of [[2]] and [[6]]
-index2 = combined.index([[2]]) + 1
-index6 = combined.index([[6]]) + 1
-print(index2 * index6)
+print(surface_area)
