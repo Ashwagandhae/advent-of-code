@@ -230,7 +230,6 @@ fn main() {
 
     let handles: Vec<JoinHandle<u32>> = contents
         .lines()
-        .take(3)
         .map(|line| {
             let mut nums = line
                 .split(" ")
@@ -283,16 +282,19 @@ fn main() {
         .enumerate()
         .map(|(index, blueprint)| {
             println!("finding {index} max geodes");
-            thread::spawn(move || max_geodes(&blueprint, 32))
+            thread::spawn(move || max_geodes(&blueprint, 24))
         })
         .collect();
     let mut results: Vec<u32> = Vec::new();
     for handle in handles {
         results.push(handle.join().unwrap());
     }
-    // find product of
-    let max_geodes_product: u32 = results.iter().product();
+    let sum_quality_levels: u32 = results
+        .iter()
+        .enumerate()
+        .map(|(index, val)| val * (index + 1) as u32)
+        .sum();
 
     // print all max geodes
-    println!("{:?}", max_geodes_product);
+    println!("{:?}", sum_quality_levels);
 }
