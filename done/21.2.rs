@@ -71,7 +71,7 @@ fn main() {
             let monkey = val
                 .parse::<f64>()
                 .ok()
-                .map(Monkey::Shout)
+                .map(|num| Monkey::Shout(num))
                 .unwrap_or_else(|| get_math_monkey(val));
             (monkey_name.to_owned(), monkey)
         })

@@ -11,7 +11,7 @@ enum Operation {
     Div,
 }
 enum Monkey {
-    Shout(f64),
+    Shout(u64),
     Math {
         monkey_1: String,
         monkey_2: String,
@@ -33,7 +33,7 @@ fn get_math_monkey(value: String) -> Monkey {
         monkey_2: split.next().unwrap().trim().to_owned(),
     }
 }
-fn get_monkey_val(monkey_name: &String, monkeys: &HashMap<String, Monkey>) -> f64 {
+fn get_monkey_val(monkey_name: &String, monkeys: &HashMap<String, Monkey>) -> u64 {
     match monkeys.get(monkey_name).unwrap() {
         Monkey::Shout(val) => *val,
         Monkey::Math {
@@ -64,40 +64,14 @@ fn main() {
         .map(|line| {
             let mut parts = line.split(": ");
             let monkey_name = parts.next().unwrap();
-            let mut val = parts.next().unwrap().to_string();
-            if monkey_name == "root" {
-                val = val.replace('+', "-");
-            }
+            let val = parts.next().unwrap();
             let monkey = val
-                .parse::<f64>()
+                .parse::<u64>()
                 .ok()
-                .map(Monkey::Shout)
-                .unwrap_or_else(|| get_math_monkey(val));
+                .map(|num| Monkey::Shout(num))
+                .unwrap_or_else(|| get_math_monkey(val.to_owned()));
             (monkey_name.to_owned(), monkey)
         })
         .collect();
-    // see which direciton changing the humn value will change root value
-    monkeys.insert("humn".into(), Monkey::Shout(0.0));
-    let root_val_1 = get_monkey_val(&"root".to_string(), &monkeys);
-    monkeys.insert("humn".into(), Monkey::Shout(1.0));
-    let root_val_2 = get_monkey_val(&"root".to_string(), &monkeys);
-    let increase_causes_increase = root_val_2 - root_val_1 > 0.0;
-    // binary search for the humn value
-    let mut lower_bound = u64::MIN;
-    let mut upper_bound = u64::MAX;
-    let answer = loop {
-        let new_val = (lower_bound / 2) + (upper_bound / 2);
-        println!("{}", new_val);
-        monkeys.insert("humn".into(), Monkey::Shout(new_val as f64));
-        let root_val = get_monkey_val(&"root".to_string(), &monkeys);
-        println!("root_val : {}", root_val);
-        if root_val == 0.0 {
-            break new_val;
-        } else if (root_val > 0.0) == increase_causes_increase {
-            upper_bound = new_val;
-        } else {
-            lower_bound = new_val;
-        }
-    };
-    println!("answer: {}", answer);
+    println!("{:?}", get_monkey_val(&"root".to_string(), &monkeys))
 }
