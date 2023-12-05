@@ -1,0 +1,14 @@
+/Users/JulianBauer/Downloads/hackerman/advent/2023/_adventer/target/release/deps/zerocopy-e22a707b7c07daaa.rmeta: /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/lib.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/macros.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/macro_util.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/util.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/third_party/rust/layout.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/wrappers.rs
+
+/Users/JulianBauer/Downloads/hackerman/advent/2023/_adventer/target/release/deps/libzerocopy-e22a707b7c07daaa.rlib: /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/lib.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/macros.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/macro_util.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/util.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/third_party/rust/layout.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/wrappers.rs
+
+/Users/JulianBauer/Downloads/hackerman/advent/2023/_adventer/target/release/deps/zerocopy-e22a707b7c07daaa.d: /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/lib.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/macros.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/macro_util.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/util.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/third_party/rust/layout.rs /Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/wrappers.rs
+
+/Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/lib.rs:
+/Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/macros.rs:
+/Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/macro_util.rs:
+/Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/util.rs:
+/Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/third_party/rust/layout.rs:
+/Users/JulianBauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerocopy-0.7.28/src/wrappers.rs:
+
+# env-dep:CARGO_PKG_VERSION=0.7.28

@@ -1,10 +1,9 @@
 s = ""
-with open("inputs/1.txt", "r") as f:
+with open("./input.txt", "r") as f:
     s = f.read()
 
 
 def num(l):
-    print(l)
     digits = [c for c in l if c in list("1234567890")]
     return int(digits[0] + digits[-1])
 

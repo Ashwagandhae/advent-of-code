@@ -1,10 +1,17 @@
 s = ""
-with open("inputs/1.txt", "r") as f:
+with open("./input.txt", "r") as f:
     s = f.read()
+
+import time
+
+for i in range(0, 5):
+    print(i)
+    time.sleep(1)
+
+raise Exception("This is a test exception")
 
 
 def num(l):
-    print(l)
     digits = [c for c in l if c in list("1234567890")]
     return int(digits[0] + digits[-1])
 

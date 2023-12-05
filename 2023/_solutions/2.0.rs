@@ -1,7 +1,8 @@
+#![allow(unused_imports)]
 use std::fs::{read_to_string, File};
 
 fn main() {
-    let txt = read_to_string("../_inputs/2.txt").unwrap();
+    let txt = read_to_string("./input.txt").unwrap();
     println!(
         "{}",
         txt.split("\n")

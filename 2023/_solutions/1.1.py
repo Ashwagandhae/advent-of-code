@@ -1,5 +1,5 @@
 s = ""
-with open("inputs/1.txt", "r") as f:
+with open("./input.txt", "r") as f:
     s = f.read()
 
 
