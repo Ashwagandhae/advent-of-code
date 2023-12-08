@@ -1,7 +1,8 @@
 use anyhow::Result;
 
-use crate::resource::{get_example_input_output, get_input};
+use crate::resource::{get_example_input, get_example_output, get_input, get_output};
 use crate::state::get_state;
+use crate::styles::{accent, error, example, real, success, warning};
 use crate::{language::Language, ProblemName, RunTarget};
 
 use std::fs;
@@ -33,44 +34,93 @@ pub fn run_from_name(name: ProblemName, target: RunTarget) -> Result<()> {
 }
 
 fn run(name: ProblemName, lang: Language, code: &str, target: RunTarget) -> Result<()> {
-    let (run_example, run_input) = match target {
-        RunTarget::Example => (true, false),
-        RunTarget::Input => (false, true),
-        RunTarget::All | RunTarget::AllConditional => (true, true),
+    let example_run = match target {
+        RunTarget::Example | RunTarget::All | RunTarget::ExampleInputChecked => Some(false),
+        RunTarget::ExampleChecked | RunTarget::AllChecked | RunTarget::ExampleCheckedInput => {
+            Some(true)
+        }
+        _ => None,
+    };
+    let input_run = match target {
+        RunTarget::Input | RunTarget::All | RunTarget::ExampleCheckedInput => Some(false),
+        RunTarget::InputChecked | RunTarget::AllChecked | RunTarget::ExampleInputChecked => {
+            Some(true)
+        }
+        _ => None,
     };
     let mut success = true;
-    if run_example {
-        println!("running {} on example...", name.to_string());
-        let (input, output) = get_example_input_output(name)?;
-        success = run_and_check(&lang, Some(&output), &input, code)?;
+    if let Some(check) = example_run {
+        success = run_and_check(
+            example("example").to_string(),
+            &name,
+            &lang,
+            check,
+            || get_example_input(name),
+            || get_example_output(name),
+            code,
+        )?;
     }
-    let skip_run_input = matches!(target, RunTarget::AllConditional) && !success;
-    if run_input {
+    let skip_run_input = matches!(
+        target,
+        RunTarget::ExampleChecked | RunTarget::AllChecked | RunTarget::ExampleCheckedInput
+    ) && !success;
+    if let Some(check) = input_run {
         if skip_run_input {
-            println!("skipping {} on input...", name.to_string());
+            println!(
+                "{} {} on {}...",
+                error("skipping"),
+                accent(name),
+                real("real")
+            );
         } else {
-            println!("running {} on input...", name.to_string());
-            let input = get_input(name.day)?;
-            run_and_check(&lang, None, &input, code)?;
+            run_and_check(
+                real("real").to_string(),
+                &name,
+                &lang,
+                check,
+                || get_input(name.day),
+                || get_output(name),
+                code,
+            )?;
         }
     }
     Ok(())
 }
 
 pub fn run_and_check(
+    section: String,
+    name: &ProblemName,
     lang: &Language,
-    correct_answer: Option<&str>,
-    input: &str,
+    check: bool,
+    get_input: impl FnOnce() -> Result<String>,
+    get_output: impl FnOnce() -> Result<String>,
     code: &str,
 ) -> Result<bool> {
-    let output = lang.run(input, code)?;
-    let success = if let Some(correct_answer) = correct_answer {
+    println!(
+        "{} {} on {}...",
+        if check {
+            warning("checking").to_string()
+        } else {
+            "running".to_string()
+        },
+        accent(*name),
+        section
+    );
+    let input = get_input()?;
+    let output = lang.run(&input, code)?;
+    let success = if check {
+        let correct_answer = get_output()?;
         let answer = get_answer_from_output(&output);
         if answer == correct_answer {
-            println!("correct! got {}", answer);
+            println!("{} got {}", success("correct!"), success(answer));
             true
         } else {
-            println!("incorrect! expected: {}, got: {}", correct_answer, answer);
+            println!(
+                "{} expected: {}, got: {}",
+                error("wrong!"),
+                warning(correct_answer),
+                error(answer)
+            );
             false
         }
     } else {

@@ -11,7 +11,7 @@
 
 ### Structure
 
-**Main folders**
+**Main**
 
 - `_adventer/`: The runner's source code.
 - `_cache/`: Cache for inputs and problem htmls.

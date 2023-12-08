@@ -1,4 +1,4 @@
-use crate::{language::Language, resource::ProblemPart, ProblemName};
+use crate::{language::Language, resource::ProblemPart, styles::accent, ProblemName};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -49,7 +49,7 @@ pub fn init_work(problem: Option<ProblemName>, language: Option<Language>) -> Re
     println!(
         "init {} work for {}...",
         state.work_state.language.to_string(),
-        state.work_state.problem.to_string()
+        accent(state.work_state.problem)
     );
     clear_work()?;
     open_work(true)?;
@@ -64,7 +64,7 @@ pub fn save_work() -> Result<()> {
         state.problem.to_string(),
         state.language.extension()
     );
-    println!("saving {}", filename);
+    println!("saving {}", accent(&filename));
     let code = std::fs::read_to_string(state.language.work_code_path())?;
     let path = format!("./_solutions/{}", filename);
     // check if file exists
@@ -99,7 +99,7 @@ pub fn print_work_status() -> Result<()> {
     let state = get_state()?;
     println!(
         "working on {} in {}",
-        state.work_state.problem.to_string(),
+        accent(state.work_state.problem),
         state.work_state.language.to_string()
     );
     Ok(())

@@ -27,11 +27,18 @@ pub fn print_input(day: i32) -> Result<()> {
     Ok(())
 }
 
-pub fn print_example_input_output(name: ProblemName) -> Result<()> {
-    let (input, output) = get_example_input_output(name)?;
-    println!("input:\n{}", input);
-    println!("output:\n{}", output);
+pub fn print_output(name: ProblemName) -> Result<()> {
+    println!("{}", get_output(name)?);
+    Ok(())
+}
 
+pub fn print_example_input(name: ProblemName) -> Result<()> {
+    println!("{}", get_example_input(name)?);
+    Ok(())
+}
+
+pub fn print_example_output(name: ProblemName) -> Result<()> {
+    println!("{}", get_example_output(name)?);
     Ok(())
 }
 
@@ -56,37 +63,85 @@ impl std::fmt::Display for ProblemPart {
     }
 }
 
-pub fn get_example_input_output(name: ProblemName) -> Result<(String, String)> {
-    let id = DataId::Html(name.day);
-    let (data, freshness) = get_data_with_freshness(id)?;
-    let result = find_example_input_output(&data, name.part);
-    Ok(match (&result, freshness) {
-        (Err(FindExampleError::IndexTooHigh(ProblemPart::One)), false) => {
+/// First tries to get cached data. If the provided function fails, it will try to get fresh data and try the function again.
+pub fn get_fresh_data_if_needed<T>(
+    id: DataId,
+    fun: impl Fn(&str) -> T,
+    success: impl Fn(&T) -> bool,
+) -> Result<T> {
+    let (data, fresh) = get_data_with_freshness(id)?;
+    let result = fun(&data);
+    match (success(&result), fresh) {
+        (false, false) => {
             uncache_data(id);
-            let data = get_data(id)?;
-            find_example_input_output(&data, name.part)
+            let data = get_data(id).unwrap();
+            Ok(fun(&data))
         }
-        _ => result,
-    }?)
+        _ => Ok(result),
+    }
+}
+
+pub fn get_output(name: ProblemName) -> Result<String> {
+    let result = get_fresh_data_if_needed(
+        DataId::Html(name.day),
+        |data| find_output(data, name.part),
+        |result| match result {
+            Err(FindOutputError::NoOutputYet(_)) => false,
+            _ => true,
+        },
+    )?;
+    Ok(result?)
+}
+
+pub fn get_example_input(name: ProblemName) -> Result<String> {
+    let result = get_fresh_data_if_needed(
+        DataId::Html(name.day),
+        |data| find_example_input(data, name.part),
+        |result| match result {
+            Err(FindExampleError::IndexTooHigh(ProblemPart::One)) => false,
+            _ => true,
+        },
+    )?;
+    Ok(result?)
+}
+
+pub fn get_example_output(name: ProblemName) -> Result<String> {
+    let result = get_fresh_data_if_needed(
+        DataId::Html(name.day),
+        |data| find_example_output(data, name.part),
+        |result| match result {
+            Err(FindExampleError::IndexTooHigh(ProblemPart::One)) => false,
+            _ => true,
+        },
+    )?;
+    Ok(result?)
 }
 use scraper::{Html, Selector};
 use thiserror::Error;
+
+#[derive(Debug, Clone, Error)]
+pub enum FindOutputError {
+    #[error("no output for {0} yet")]
+    NoOutputYet(ProblemPart),
+}
+
+fn find_output(html: &str, index: ProblemPart) -> Result<String, FindOutputError> {
+    let document = Html::parse_document(html);
+    let main = Selector::parse("main > article.day-desc + p").unwrap();
+    let Some(para) = document.select(&main).nth(match index {
+        ProblemPart::Zero => 0,
+        ProblemPart::One => 1,
+    }) else { return Err(FindOutputError::NoOutputYet(index))};
+    let select = Selector::parse("code").unwrap();
+    let code = para.select(&select).next().unwrap();
+    Ok(code.text().join("").trim().to_string())
+}
 
 #[derive(Debug, Clone, Error)]
 pub enum FindExampleError {
     #[error("advent of code didn't have a problem at {0}")]
     IndexTooHigh(ProblemPart),
 }
-fn find_example_input_output(
-    html: &str,
-    index: ProblemPart,
-) -> Result<(String, String), FindExampleError> {
-    Ok((
-        find_example_input(html, index)?,
-        find_example_output(html, index)?,
-    ))
-}
-
 fn find_example_input(html: &str, index: ProblemPart) -> Result<String, FindExampleError> {
     let document = Html::parse_document(html);
     let main = Selector::parse("main > article.day-desc").unwrap();
@@ -124,8 +179,8 @@ fn find_example_output(html: &str, index: ProblemPart) -> Result<String, FindExa
     // get second to last para
     let paras = article.select(&select).collect_vec();
     let second_to_last = paras[paras.len() - 2];
-    // get last <code> in that para
-    let select = Selector::parse("code").unwrap();
+    // get last <code> > <em> in that para
+    let select = Selector::parse("code > em").unwrap();
     let mut codes = second_to_last.select(&select).collect_vec();
     let last = codes.pop().unwrap();
     Ok(last.text().join("").trim().to_string())
