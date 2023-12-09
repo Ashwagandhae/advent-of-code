@@ -208,11 +208,11 @@ pub enum DataId {
 impl DataId {
     fn cache_file_name(&self) -> String {
         match self {
-            DataId::ProblemHtml(day) => format!("{}.html", day),
-            DataId::InputText(day) => format!("{}i.txt", day),
-            DataId::OutputText(problem) => format!("{}o.txt", problem.to_string()),
-            DataId::ExampleInputText(problem) => format!("{}ei.txt", problem.to_string()),
-            DataId::ExampleOutputText(problem) => format!("{}eo.txt", problem.to_string()),
+            DataId::ProblemHtml(day) => format!("{}.html", day.0),
+            DataId::InputText(day) => format!("{}i.txt", day.0),
+            DataId::OutputText(problem) => format!("{}o.txt", problem),
+            DataId::ExampleInputText(problem) => format!("{}ei.txt", problem),
+            DataId::ExampleOutputText(problem) => format!("{}eo.txt", problem),
         }
     }
 
@@ -304,19 +304,27 @@ pub fn http_client(session_cookie: &str, content_type: &str) -> Result<HttpClien
 
 #[derive(Debug)]
 pub enum SubmissionOutcome {
-    Correct,
-    Incorrect,
+    Correct(bool),
+    Incorrect(bool),
     Wait,
     WrongLevel,
 }
 
 pub fn submit_answer(problem: Problem, answer: &str) -> Result<SubmissionOutcome> {
+    if let Some(correct_answer) = get_data_from_cache(DataId::OutputText(problem))? {
+        return Ok(if correct_answer == answer {
+            SubmissionOutcome::Correct(true)
+        } else {
+            SubmissionOutcome::Incorrect(true)
+        });
+    }
+
     let outcome = submit_answer_html(problem, answer)?;
     if outcome.contains("That's the right answer") {
         cache_data(DataId::OutputText(problem), answer.trim())?;
-        Ok(SubmissionOutcome::Correct)
+        Ok(SubmissionOutcome::Correct(false))
     } else if outcome.contains("That's not the right answer") {
-        Ok(SubmissionOutcome::Incorrect)
+        Ok(SubmissionOutcome::Incorrect(false))
     } else if outcome.contains("You gave an answer too recently") {
         Ok(SubmissionOutcome::Wait)
     } else if outcome.contains("You don't seem to be solving the right level") {

@@ -24,7 +24,7 @@ pub fn run_from_name(problem: Problem, target: RunTarget, quiet: bool) -> Result
                 .and_then(|name| name.to_str())
                 .is_some_and(|name| name.starts_with(&problem.to_string()))
         })
-        .context(format!("no solution file for {}", problem))?;
+        .context(format!("no solution file for {}", accent(problem)))?;
 
     let code = fs::read_to_string(file.clone())?;
     let extension = file
@@ -33,8 +33,10 @@ pub fn run_from_name(problem: Problem, target: RunTarget, quiet: bool) -> Result
         .to_str()
         .context(format!("invalid extension for {}", file.display()))?;
 
-    let lang = Language::from_extension(extension)
-        .context(format!("extension matches no known lang: {}", extension))?;
+    let lang = Language::from_extension(extension).context(format!(
+        "extension matches no known lang: {}",
+        accent(extension)
+    ))?;
     run(problem, lang, &code, target, quiet)
 }
 
@@ -116,11 +118,27 @@ fn run(name: Problem, lang: Language, code: &str, target: RunTarget, quiet: bool
                     );
                     let outcome = submit_answer(name, &answer)?;
                     match outcome {
-                        SubmissionOutcome::Correct => {
-                            println!("{}", crate::styles::success("correct!"))
+                        SubmissionOutcome::Correct(submitted) => {
+                            println!(
+                                "{} {}",
+                                crate::styles::success("correct!"),
+                                if submitted {
+                                    warning("(already submitted)").to_string()
+                                } else {
+                                    "".into()
+                                }
+                            )
                         }
-                        SubmissionOutcome::Incorrect => {
-                            println!("{}", error("wrong!"))
+                        SubmissionOutcome::Incorrect(submitted) => {
+                            println!(
+                                "{} {}",
+                                error("wrong!"),
+                                if submitted {
+                                    warning("(already submitted)").to_string()
+                                } else {
+                                    "".into()
+                                }
+                            )
                         }
                         SubmissionOutcome::Wait => {
                             println!("{}", warning("wait!"))
@@ -132,7 +150,7 @@ fn run(name: Problem, lang: Language, code: &str, target: RunTarget, quiet: bool
                 } else {
                     println!(
                         "{} {}",
-                        warning("skpping submission, invalid answer: {}"),
+                        warning("skipping submission, invalid answer: {}"),
                         error(answer)
                     );
                 }
@@ -169,7 +187,7 @@ pub fn run_and_check(
     );
     let input = get_input()?;
     let output = lang.run(&input, code, quiet)?;
-    let answer = get_answer_from_output(&output);
+    let answer = get_answer_from_output(&output)?;
     let success = if check {
         let correct_answer = get_output()?;
         if answer == correct_answer {
@@ -190,14 +208,17 @@ pub fn run_and_check(
     Ok(success)
 }
 
-pub fn get_answer_from_output(output: &str) -> String {
+use strip_ansi_escapes;
+pub fn get_answer_from_output(output: &str) -> Result<String> {
     // split into lines and get last line
-    output
+    let output = output
         .split('\n')
         .filter(|line| !line.is_empty())
         .last()
         .unwrap_or(output)
-        .to_string()
+        .trim();
+    let output = strip_ansi_escapes::strip(output);
+    Ok(String::from_utf8(output)?)
 }
 
 pub fn create_input_file(path: &str, input: &str) -> Result<()> {

@@ -42,10 +42,10 @@ pub struct ProblemDay(pub u8);
 
 impl ProblemDay {
     pub fn parse(name: &str) -> Result<Self> {
-        Ok(Self(
-            name.parse()
-                .context(format!("invalid problem day: {}", name))?,
-        ))
+        Ok(Self(name.parse().context(format!(
+            "invalid problem day: {}",
+            accent(name)
+        ))?))
     }
 }
 
@@ -80,7 +80,7 @@ impl Problem {
     pub fn parse(name: &str) -> Result<Self> {
         let (day, part) = name
             .split_once('.')
-            .context(format!("invalid problem name: {}", name))?;
+            .context(format!("invalid problem name: {}", accent(name)))?;
         Ok(Self {
             day: ProblemDay::parse(day)?,
             part: match part {
@@ -100,7 +100,7 @@ impl From<Problem> for String {
 
 impl std::fmt::Display for Problem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        accent(self.to_string()).fmt(f)
+        write!(f, "{}.{}", self.day, self.part)
     }
 }
 

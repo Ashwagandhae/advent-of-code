@@ -4,21 +4,24 @@ use itertools::Itertools;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::read_to_string;
 
+fn rec(vec: Vec<i32>) -> i32 {
+    println!("{:?}", vec);
+
+    if vec.iter().all(|&x| x == 0) {
+        return 0;
+    }
+    let child = vec
+        .iter()
+        .tuple_windows()
+        .map(|(&x, &y)| y - x)
+        .collect_vec();
+    let final_diff = rec(child.clone());
+    return vec.first().unwrap() - final_diff;
+}
+
 fn main() {
     let txt = read_to_string("./input.txt").unwrap();
-    let answer = parser!("Time:" " "+ repeat_sep(string(digit+), " "+) "\n" "Distance:" " "+ repeat_sep(string(digit+), " "+) ).parse(&txt).unwrap();
-    let (_, times, _, dists) = answer;
-    let time = times.join("").parse::<usize>().unwrap();
-    let best_dist = dists.join("").parse::<usize>().unwrap();
-    let answer = (0..time)
-        .map(|speed| {
-            let dist = (time - speed) * speed;
-            if dist > best_dist {
-                1
-            } else {
-                0
-            }
-        })
-        .sum::<usize>();
+    let answer = parser!(lines(repeat_sep(i32, " "))).parse(&txt).unwrap();
+    let answer = answer.into_iter().map(|x| rec(x)).sum::<i32>();
     println!("{:?}", answer);
 }

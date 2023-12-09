@@ -7,6 +7,8 @@ pub enum Language {
     Rust,
     #[clap(alias = "py")]
     Python,
+    #[clap(alias = "ts")]
+    TypeScript,
 }
 
 impl Language {
@@ -14,6 +16,7 @@ impl Language {
         match extension {
             "rs" => Some(Self::Rust),
             "py" => Some(Self::Python),
+            "ts" => Some(Self::TypeScript),
             _ => None,
         }
     }
@@ -21,12 +24,14 @@ impl Language {
         match self {
             Self::Rust => "rust",
             Self::Python => "python",
+            Self::TypeScript => "typescript",
         }
     }
     pub fn extension(&self) -> &str {
         match self {
             Self::Rust => "rs",
             Self::Python => "py",
+            Self::TypeScript => "ts",
         }
     }
 
@@ -54,6 +59,17 @@ impl Language {
                     quiet,
                 )?)
             }
+            Self::TypeScript => {
+                create_input_file("./typescript", input)?;
+                Ok(run_code(
+                    code,
+                    "./typescript/index.ts",
+                    "bun",
+                    &["run", "index.ts"],
+                    "./typescript",
+                    quiet,
+                )?)
+            }
         }
     }
 
@@ -61,6 +77,7 @@ impl Language {
         match self {
             Self::Rust => "./rust/src/main.rs".to_string(),
             Self::Python => "./python/main.py".to_string(),
+            Self::TypeScript => "./typescript/index.ts".to_string(),
         }
     }
 
@@ -88,7 +105,13 @@ with open("./input.txt", "r") as f:
     s = f.read()
 answer = 0
 print(answer)"#,
-                (6, 11),
+                (6, 12),
+            ),
+            Self::TypeScript => (
+                r#"let text = await Bun.file("./input.txt").text();
+let answer = 0;
+console.log(answer);"#,
+                (2, 15),
             ),
         }
     }

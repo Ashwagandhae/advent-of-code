@@ -62,7 +62,7 @@ pub fn save_work() -> Result<()> {
     let state = get_state()?.work_state;
     let filename = format!(
         "{}.{}",
-        state.problem.to_string(),
+        state.problem,
         state.language.extension()
     );
     println!("saving {}", accent(&filename));

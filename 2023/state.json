@@ -1,9 +1,9 @@
 {
   "work_state": {
     "problem": {
-      "day": 9,
-      "part": "One"
+      "day": 1,
+      "part": "Zero"
     },
-    "language": "Rust"
+    "language": "TypeScript"
   }
 }
