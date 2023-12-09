@@ -33,7 +33,7 @@ impl Language {
     pub fn run(&self, input: &str, code: &str, quiet: bool) -> Result<String> {
         match self {
             Self::Rust => {
-                create_input_file("./rust", &input)?;
+                create_input_file("./rust", input)?;
                 Ok(run_code(
                     code,
                     "./rust/src/main.rs",
@@ -44,7 +44,7 @@ impl Language {
                 )?)
             }
             Self::Python => {
-                create_input_file("./python", &input)?;
+                create_input_file("./python", input)?;
                 Ok(run_code(
                     code,
                     "./python/main.py",

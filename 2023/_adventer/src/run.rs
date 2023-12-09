@@ -21,8 +21,7 @@ pub fn run_from_name(problem: Problem, target: RunTarget, quiet: bool) -> Result
         .filter_map(|entry| Some(entry.ok()?.path()))
         .find(|path| {
             path.file_name()
-                .map(|name| name.to_str())
-                .flatten()
+                .and_then(|name| name.to_str())
                 .is_some_and(|name| name.starts_with(&problem.to_string()))
         })
         .context(format!("no solution file for {}", problem))?;
@@ -134,7 +133,7 @@ fn run(name: Problem, lang: Language, code: &str, target: RunTarget, quiet: bool
                     println!(
                         "{} {}",
                         warning("skpping submission, invalid answer: {}"),
-                        error(answer.clone())
+                        error(answer)
                     );
                 }
             }
@@ -147,6 +146,7 @@ pub fn is_valid_answer(answer: &str) -> bool {
     answer.chars().all(|c| c.is_ascii_digit())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn run_and_check(
     section: String,
     name: &Problem,
@@ -193,8 +193,7 @@ pub fn run_and_check(
 pub fn get_answer_from_output(output: &str) -> String {
     // split into lines and get last line
     output
-        .clone()
-        .split("\n")
+        .split('\n')
         .filter(|line| !line.is_empty())
         .last()
         .unwrap_or(output)

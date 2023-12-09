@@ -3,8 +3,8 @@ use anyhow::Result;
 use itertools::Itertools;
 use reqwest;
 use serde::Deserialize;
-use std::cell::OnceCell;
 use std::fs;
+use std::sync::OnceLock;
 
 pub const YEAR: i32 = 2023;
 
@@ -13,9 +13,9 @@ pub struct Secrets {
     pub session: String,
 }
 
-const SECRETS: OnceCell<Secrets> = OnceCell::new();
+static SECRETS: OnceLock<Secrets> = OnceLock::new();
 
-fn secrets(secrets: &OnceCell<Secrets>) -> &Secrets {
+fn secrets(secrets: &OnceLock<Secrets>) -> &Secrets {
     secrets.get_or_init(|| {
         let secrets: Secrets =
             serde_json::from_str(&std::fs::read_to_string("./secrets.json").expect(
@@ -88,10 +88,7 @@ pub fn get_output_from_html(name: Problem) -> Result<String> {
     let result = get_fresh_data_if_needed(
         DataId::ProblemHtml(name.day),
         |data| find_output(data, name.part),
-        |result| match result {
-            Err(FindOutputError::NoOutputYet(_)) => false,
-            _ => true,
-        },
+        |result| !matches!(result, Err(FindOutputError::NoOutputYet(_))),
     )?;
     Ok(result?)
 }
@@ -100,9 +97,11 @@ pub fn get_example_input_from_html(name: Problem) -> Result<String> {
     let result = get_fresh_data_if_needed(
         DataId::ProblemHtml(name.day),
         |data| find_example_input(data, name.part),
-        |result| match result {
-            Err(FindExampleError::IndexTooHigh(ProblemPart::One)) => false,
-            _ => true,
+        |result| {
+            !matches!(
+                result,
+                Err(FindExampleError::IndexTooHigh(ProblemPart::One))
+            )
         },
     )?;
     Ok(result?)
@@ -112,9 +111,11 @@ pub fn get_example_output_from_html(name: Problem) -> Result<String> {
     let result = get_fresh_data_if_needed(
         DataId::ProblemHtml(name.day),
         |data| find_example_output(data, name.part),
-        |result| match result {
-            Err(FindExampleError::IndexTooHigh(ProblemPart::One)) => false,
-            _ => true,
+        |result| {
+            !matches!(
+                result,
+                Err(FindExampleError::IndexTooHigh(ProblemPart::One))
+            )
         },
     )?;
     Ok(result?)
@@ -171,9 +172,9 @@ fn find_example_input(html: &str, index: ProblemPart) -> Result<String, FindExam
         el_1.value().name() == "p"
             && el_2.value().name() == "pre"
             && (formatted_text.contains("example") || formatted_text.contains("consider"))
-            && formatted_text.ends_with(":")
+            && formatted_text.ends_with(':')
     })
-    .map(|(_, el)| el.text().join("").to_string()) else { return Err(FindExampleError::NoExampleElementInArticle)};
+    .map(|(_, el)| el.text().join("")) else { return Err(FindExampleError::NoExampleElementInArticle)};
     Ok(example_input_text.trim().to_string())
 }
 
@@ -287,7 +288,7 @@ use crate::problem::Problem;
 pub fn http_client(session_cookie: &str, content_type: &str) -> Result<HttpClient> {
     let cookie_header = HeaderValue::from_str(&format!("session={}", session_cookie.trim()))?;
     let content_type_header = HeaderValue::from_str(content_type)?;
-    let user_agent = format!("adventer 1.0");
+    let user_agent = "adventer 1.0".to_string();
     let user_agent_header = HeaderValue::from_str(&user_agent)?;
 
     let mut headers = HeaderMap::new();

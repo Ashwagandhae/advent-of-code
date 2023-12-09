@@ -41,7 +41,7 @@ pub trait ListParseable: Eq + Copy {
 pub struct ProblemDay(pub u8);
 
 impl ProblemDay {
-    pub fn from_str(name: &str) -> Result<Self> {
+    pub fn parse(name: &str) -> Result<Self> {
         Ok(Self(
             name.parse()
                 .context(format!("invalid problem day: {}", name))?,
@@ -51,7 +51,7 @@ impl ProblemDay {
 
 impl ListParseable for ProblemDay {
     fn parse_single(name_list: &str) -> Result<Vec<ProblemDay>> {
-        Ok(vec![ProblemDay::from_str(name_list)?])
+        Ok(vec![ProblemDay::parse(name_list)?])
     }
     fn next(&self) -> Self {
         Self(self.0 + 1)
@@ -77,12 +77,12 @@ pub struct Problem {
 }
 
 impl Problem {
-    pub fn from_str(name: &str) -> Result<Self> {
+    pub fn parse(name: &str) -> Result<Self> {
         let (day, part) = name
-            .split_once(".")
+            .split_once('.')
             .context(format!("invalid problem name: {}", name))?;
         Ok(Self {
-            day: ProblemDay::from_str(day)?,
+            day: ProblemDay::parse(day)?,
             part: match part {
                 "0" => ProblemPart::Zero,
                 "1" => ProblemPart::One,
@@ -90,14 +90,11 @@ impl Problem {
             },
         })
     }
-    pub fn to_string(&self) -> String {
-        format!("{}.{}", self.day, self.part)
-    }
 }
 
-impl Into<String> for Problem {
-    fn into(self) -> String {
-        self.to_string()
+impl From<Problem> for String {
+    fn from(val: Problem) -> Self {
+        val.to_string()
     }
 }
 
@@ -109,10 +106,10 @@ impl std::fmt::Display for Problem {
 
 impl ListParseable for Problem {
     fn parse_single(name_list: &str) -> Result<Vec<Problem>> {
-        if name_list.contains(".") {
-            Ok(vec![Problem::from_str(name_list)?])
+        if name_list.contains('.') {
+            Ok(vec![Problem::parse(name_list)?])
         } else {
-            let day = ProblemDay::from_str(name_list)?;
+            let day = ProblemDay::parse(name_list)?;
             Ok(vec![
                 Problem {
                     day,
@@ -152,13 +149,13 @@ impl ListParseable for Problem {
 }
 
 pub fn parse_problem(s: &str) -> Result<Problem> {
-    Problem::from_str(s)
+    Problem::parse(s)
 }
 
 pub fn parse_list<T: ListParseable>(item_list: &str) -> Result<Vec<T>> {
-    if item_list.contains(",") {
+    if item_list.contains(',') {
         Ok(item_list
-            .split(",")
+            .split(',')
             .map(|s| T::parse_single(s))
             .collect::<Result<Vec<Vec<T>>>>()?
             .into_iter()

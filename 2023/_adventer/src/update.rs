@@ -14,6 +14,6 @@ pub fn update() -> Result<()> {
     )?;
     println!("replacing...");
     let new_binary = "./_adventer/target/release/_adventer";
-    self_replace::self_replace(&new_binary)?;
+    self_replace::self_replace(new_binary)?;
     Ok(())
 }
