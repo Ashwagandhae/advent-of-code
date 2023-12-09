@@ -1,4 +1,5 @@
-use crate::{language::Language, resource::ProblemPart, styles::accent, ProblemName};
+use crate::problem::{ListParseable, Problem, ProblemDay};
+use crate::{language::Language, problem::ProblemPart, styles::accent};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -9,15 +10,15 @@ pub struct State {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkState {
-    pub problem: ProblemName,
+    pub problem: Problem,
     pub language: Language,
 }
 impl std::default::Default for State {
     fn default() -> Self {
         Self {
             work_state: WorkState {
-                problem: ProblemName {
-                    day: 1,
+                problem: Problem {
+                    day: ProblemDay(1),
                     part: ProblemPart::Zero,
                 },
                 language: Language::Rust,
@@ -33,7 +34,7 @@ pub fn modify_state(closure: impl FnOnce(&mut State)) -> Result<()> {
     Ok(())
 }
 
-pub fn set_work(problem: Option<ProblemName>, language: Option<Language>) -> Result<()> {
+pub fn set_work(problem: Option<Problem>, language: Option<Language>) -> Result<()> {
     modify_state(|state| {
         state.work_state = WorkState {
             problem: problem.unwrap_or(state.work_state.problem),
@@ -43,7 +44,7 @@ pub fn set_work(problem: Option<ProblemName>, language: Option<Language>) -> Res
     print_work_status()
 }
 
-pub fn init_work(problem: Option<ProblemName>, language: Option<Language>) -> Result<()> {
+pub fn init_work(problem: Option<Problem>, language: Option<Language>) -> Result<()> {
     set_work(problem, language)?;
     let state = get_state()?;
     println!(
@@ -83,15 +84,7 @@ pub fn save_work() -> Result<()> {
 
 pub fn save_and_next_work() -> Result<()> {
     save_work()?;
-    modify_state(|state| {
-        state.work_state.problem.part = match state.work_state.problem.part {
-            ProblemPart::Zero => ProblemPart::One,
-            ProblemPart::One => {
-                state.work_state.problem.day += 1;
-                ProblemPart::Zero
-            }
-        }
-    })?;
+    modify_state(|state| state.work_state.problem = state.work_state.problem.next())?;
     print_work_status()
 }
 

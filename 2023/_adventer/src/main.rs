@@ -1,12 +1,13 @@
 pub mod resource;
 use clap::{self, ValueEnum};
-use resource::{print_example_input, print_example_output, print_input, print_output, ProblemPart};
+use resource::{print_example_input, print_example_output, print_input, print_output};
 pub mod update;
 use update::update;
 pub mod run;
 use run::{run_from_name, run_from_work};
 pub mod command;
 pub mod language;
+pub mod problem;
 pub mod state;
 pub mod styles;
 
@@ -40,16 +41,21 @@ enum Commands {
 #[derive(Args, Debug)]
 struct RunArgs {
     /// Problem to run
-    problem: String,
+    problem_list: String,
     /// Test on input, example input/output, or both
     #[clap(value_enum, default_value_t = RunTarget::Input)]
     on: RunTarget,
+    /// Don't print program output
+    #[clap(short, long)]
+    quiet: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
 pub enum RunTarget {
     #[clap(alias = "i")]
     Input,
+    #[clap(alias = "is")]
+    InputThenSubmit,
     #[clap(alias = "ic")]
     InputChecked,
     #[clap(alias = "e")]
@@ -58,10 +64,14 @@ pub enum RunTarget {
     ExampleChecked,
     #[clap(alias = "a", alias = "ei")]
     All,
+    #[clap(alias = "as", alias = "eis")]
+    AllThenSubmit,
     #[clap(alias = "ac", alias = "ecic")]
     AllChecked,
     #[clap(alias = "eci")]
     ExampleCheckedInput,
+    #[clap(alias = "ecis")]
+    ExampleCheckedInputThenSubmit,
     #[clap(alias = "eic")]
     ExampleInputChecked,
 }
@@ -84,17 +94,17 @@ pub enum ResourceCommands {
 
 #[derive(Args, Debug)]
 pub struct InputArgs {
-    day: i32,
+    day_list: String,
 }
 
 #[derive(Args, Debug)]
 pub struct OutputArgs {
-    problem: String,
+    problem_list: String,
 }
 
 #[derive(Args, Debug)]
 pub struct ExampleArgs {
-    problem: String,
+    problem_list: String,
 }
 
 #[derive(Subcommand)]
@@ -128,8 +138,11 @@ pub enum WorkCommands {
 #[derive(Args, Debug)]
 pub struct WorkRunArgs {
     /// Test on input, example input/output, or both
-    #[clap(value_enum, default_value_t = RunTarget::ExampleCheckedInput)]
+    #[clap(value_enum, default_value_t = RunTarget::ExampleCheckedInputThenSubmit)]
     on: RunTarget,
+    /// Don't print program output
+    #[clap(short, long)]
+    quiet: bool,
 }
 
 #[derive(Args, Debug)]
@@ -140,76 +153,65 @@ pub struct WorkSetArgs {
     language: Option<language::Language>,
 }
 
-use serde::{Deserialize, Serialize};
+use problem::{parse_list, parse_problem};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct ProblemName {
-    pub day: i32,
-    pub part: ProblemPart,
-}
-
-impl ProblemName {
-    pub fn from_str(name: &str) -> Option<Self> {
-        let (day, part) = name.split_once(".")?;
-        let day = day.parse::<i32>().ok()?;
-        let part = part.parse::<i32>().ok()?;
-        Some(Self {
-            day,
-            part: match part {
-                0 => ProblemPart::Zero,
-                1 => ProblemPart::One,
-                _ => return None,
-            },
-        })
+use anyhow::Result;
+fn eachify<I>(func: impl Fn(I) -> Result<()>, vec: Vec<I>) -> Result<()> {
+    for i in vec {
+        func(i)?;
     }
-    pub fn to_string(&self) -> String {
-        format!("{}.{}", self.day, self.part)
-    }
+    Ok(())
 }
 
-impl Into<String> for ProblemName {
-    fn into(self) -> String {
-        self.to_string()
-    }
-}
-
-fn problem_name(s: &str) -> ProblemName {
-    ProblemName::from_str(s).expect("invalid problem name")
-}
-fn main() {
+fn run() -> Result<()> {
     let args = Cli::parse();
-    let res = match args.command {
+    match args.command {
         Some(Commands::Update) => update(),
-        Some(Commands::Run(RunArgs { problem, on })) => run_from_name(problem_name(&problem), on),
+        Some(Commands::Run(RunArgs {
+            problem_list,
+            on,
+            quiet,
+        })) => {
+            // run_from_name(parse_problem(&problem), on)
+            eachify(
+                |problem| run_from_name(problem, on, quiet),
+                parse_list(&problem_list)?,
+            )
+        }
         Some(Commands::Resource(command)) => match command {
-            ResourceCommands::Input(InputArgs { day }) => print_input(day),
-            ResourceCommands::Output(OutputArgs { problem }) => {
-                print_output(problem_name(&problem))
+            ResourceCommands::Input(InputArgs { day_list }) => {
+                eachify(print_input, parse_list(&day_list)?)
             }
-            ResourceCommands::ExampleInput(ExampleArgs { problem }) => {
-                print_example_input(problem_name(&problem))
+            ResourceCommands::Output(OutputArgs { problem_list }) => {
+                eachify(print_output, parse_list(&problem_list)?)
             }
-            ResourceCommands::ExampleOutput(ExampleArgs { problem }) => {
-                print_example_output(problem_name(&problem))
+            ResourceCommands::ExampleInput(ExampleArgs { problem_list }) => {
+                eachify(print_example_input, parse_list(&problem_list)?)
+            }
+            ResourceCommands::ExampleOutput(ExampleArgs { problem_list }) => {
+                eachify(print_example_output, parse_list(&problem_list)?)
             }
         },
         Some(Commands::Work(command)) => match command {
-            WorkCommands::Run(WorkRunArgs { on }) => run_from_work(on),
+            WorkCommands::Run(WorkRunArgs { on, quiet }) => run_from_work(on, quiet),
             WorkCommands::Set(WorkSetArgs { problem, language }) => {
-                state::set_work(problem.map(|s| problem_name(&s)), language)
+                state::set_work(problem.map(|s| parse_problem(&s)).transpose()?, language)
             }
             WorkCommands::Save => state::save_work(),
             WorkCommands::Next => state::save_and_next_work(),
-            WorkCommands::Status => state::print_work_status(),
             WorkCommands::Open => state::open_work(false),
             WorkCommands::Clear => state::clear_work(),
             WorkCommands::Init(WorkSetArgs { problem, language }) => {
-                state::init_work(problem.map(|s| problem_name(&s)), language)
+                state::init_work(problem.map(|s| parse_problem(&s)).transpose()?, language)
             }
+            WorkCommands::Status => state::print_work_status(),
         },
         None => Ok(()),
-    };
-    if let Err(e) = res {
-        panic!("{}", e);
+    }
+}
+fn main() {
+    if let Err(e) = run() {
+        println!("{}", e);
+        std::process::exit(1);
     }
 }

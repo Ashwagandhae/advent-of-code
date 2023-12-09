@@ -14,7 +14,7 @@ pub fn run_command(command: &mut Command) -> Result<()> {
     let output = command.output()?;
     if !output.status.success() {
         return Err(CommandError::CommandError {
-            message: String::from_utf8(output.stderr).unwrap(),
+            message: String::from_utf8(output.stderr)?,
         })?;
     }
     Ok(())

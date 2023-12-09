@@ -30,10 +30,30 @@ impl Language {
         }
     }
 
-    pub fn run(&self, input: &str, code: &str) -> Result<String> {
+    pub fn run(&self, input: &str, code: &str, quiet: bool) -> Result<String> {
         match self {
-            Self::Rust => run_rust(input, code),
-            Self::Python => run_python(input, code),
+            Self::Rust => {
+                create_input_file("./rust", &input)?;
+                Ok(run_code(
+                    code,
+                    "./rust/src/main.rs",
+                    "cargo",
+                    &["run", "--quiet", "--release"],
+                    "./rust",
+                    quiet,
+                )?)
+            }
+            Self::Python => {
+                create_input_file("./python", &input)?;
+                Ok(run_code(
+                    code,
+                    "./python/main.py",
+                    "python3",
+                    &["main.py"],
+                    "./python",
+                    quiet,
+                )?)
+            }
         }
     }
 
@@ -76,24 +96,3 @@ print(answer)"#,
 
 use crate::run::{create_input_file, run_code};
 use anyhow::Result;
-fn run_rust(input: &str, code: &str) -> Result<String> {
-    create_input_file("./rust", &input)?;
-    Ok(run_code(
-        code,
-        "./rust/src/main.rs",
-        "cargo",
-        &["run", "--quiet", "--release"],
-        "./rust",
-    )?)
-}
-
-fn run_python(input: &str, code: &str) -> Result<String> {
-    create_input_file("./python", &input)?;
-    Ok(run_code(
-        code,
-        "./python/main.py",
-        "python3",
-        &["main.py"],
-        "./python",
-    )?)
-}
