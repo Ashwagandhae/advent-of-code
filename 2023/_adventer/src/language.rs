@@ -86,10 +86,11 @@ impl Language {
             Self::Rust => (
                 r#"#![allow(unused_imports)]
 use aoc_parse::{parser, prelude::*};
+use array2d::Array2D;
+use cached::proc_macro::cached;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::read_to_string;
-use array2d::Array2D;
 
 fn main() {
     let txt = read_to_string("./input.txt").unwrap();
