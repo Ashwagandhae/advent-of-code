@@ -1,0 +1,9 @@
+/Users/julianbauer/Downloads/hackerman/advent/2024/rust/target/debug/deps/libcached_proc_macro-38fa73ebedd3bfb1.dylib: /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/lib.rs /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/cached.rs /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/helpers.rs /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/io_cached.rs /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/once.rs
+
+/Users/julianbauer/Downloads/hackerman/advent/2024/rust/target/debug/deps/cached_proc_macro-38fa73ebedd3bfb1.d: /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/lib.rs /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/cached.rs /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/helpers.rs /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/io_cached.rs /Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/once.rs
+
+/Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/lib.rs:
+/Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/cached.rs:
+/Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/helpers.rs:
+/Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/io_cached.rs:
+/Users/julianbauer/.cargo/registry/src/index.crates.io-6f17d22bba15001f/cached_proc_macro-0.23.0/src/once.rs:

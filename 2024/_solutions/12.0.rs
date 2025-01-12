@@ -1,0 +1,90 @@
+#![allow(unused_imports)]
+use aoc_parse::{parser, prelude::*};
+use array2d::Array2D;
+use cached::proc_macro::cached;
+use itertools::Itertools;
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::fs::read_to_string;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+enum Side {
+    Top,
+    Left,
+}
+
+fn get_sides(pos: (usize, usize)) -> [(usize, usize, Side); 4] {
+    [
+        (pos.0, pos.1, Side::Top),      // top
+        (pos.0, pos.1, Side::Left),     // left
+        (pos.0 + 1, pos.1, Side::Top),  // bottom
+        (pos.0, pos.1 + 1, Side::Left), // right
+    ]
+}
+
+fn count_area_and_perimeter(
+    pos: (usize, usize),
+    grid: &Array2D<char>,
+    visited: &mut Array2D<bool>,
+) -> (usize, usize) {
+    fn get_tiles(
+        pos: (usize, usize),
+        target: char,
+        grid: &Array2D<char>,
+        visited: &mut Array2D<bool>,
+    ) -> Vec<(usize, usize)> {
+        if !visited.get(pos.0, pos.1).is_some_and(|v| *v == false) {
+            return Vec::new();
+        }
+        match grid.get(pos.0, pos.1) {
+            Some(&c) if c == target => {
+                let mut ret = vec![pos];
+                visited[pos] = true;
+
+                ret.extend(
+                    [(0, 1), (0, -1), (1, 0), (-1, 0)]
+                        .into_iter()
+                        .filter_map(|delta| {
+                            Some((
+                                pos.0.checked_add_signed(delta.0)?,
+                                pos.1.checked_add_signed(delta.1)?,
+                            ))
+                        })
+                        .flat_map(|new_pos| get_tiles(new_pos, target, grid, visited)),
+                );
+                ret
+            }
+            _ => Vec::new(),
+        }
+    }
+    let tiles = get_tiles(pos, grid[pos], grid, visited);
+    let area = tiles.len();
+    let perimeter = tiles
+        .into_iter()
+        .flat_map(get_sides)
+        .fold(
+            HashMap::new(),
+            |mut map: HashMap<(usize, usize, Side), u32>, tile| {
+                map.entry(tile).and_modify(|x| *x += 1).or_insert(1);
+                map
+            },
+        )
+        .into_iter()
+        .filter(|(_, count)| *count == 1)
+        .count();
+    (area, perimeter)
+}
+
+fn main() {
+    let txt = read_to_string("./input.txt").unwrap();
+    let grid = Array2D::from_rows(&parser!(lines(any_char+)).parse(&txt).unwrap()).unwrap();
+    let mut visited = Array2D::filled_with(false, grid.num_rows(), grid.num_columns());
+
+    let mut answer = 0;
+    for i in 0..grid.num_rows() {
+        for j in 0..grid.num_columns() {
+            let (area, perimeter) = count_area_and_perimeter((i, j), &grid, &mut visited);
+            answer += area * perimeter;
+        }
+    }
+    println!("{:?}", answer);
+}
